@@ -27,19 +27,47 @@
             :fields="selectFields"
             :filter="filterCriteria"
             :items="users"
-            @row-selected="rowSelected"
+            @row-selected="dropdownRowSelected"
           ></b-table>
         </b-collapse>
       </b-col>
     </b-row>
     <b-tabs content-class="mt-3" v-model="tabIndex">
       <b-tab title="Чьи обязанности исполняет" active>
-        <b-table :fields="fields" :items="substituted" :keyword="userName"></b-table>
+        <b-table
+          :fields="substitutedFields"
+          :items="substituted"
+          :keyword="userName"
+          selectable
+          select-mode="multi"
+          @row-selected="onRowSelected"
+          responsive="sm"
+        >
+          <template v-slot:cell(selected)="{ rowSelected }">
+            <template v-if="rowSelected">
+              <span aria-hidden="true">&check;</span>
+              <span class="sr-only">Selected</span>
+            </template>
+            <template v-else>
+              <span aria-hidden="true">&nbsp;</span>
+              <span class="sr-only">Not selected</span>
+            </template>
+          </template>
+        </b-table>
+        <b-button class="form-button" @click="removeSubstituted">Удалить</b-button>
+        <b-button class="form-button" v-b-modal.adding-substituted>Добавить</b-button>
       </b-tab>
-      <b-tab title="Кто исполняет обязанности пользователя" lazy>
-        <b-table :fields="fields" :items="deputies" :keyword="userName"></b-table>
+      <b-tab title="Кто исполняет обязанности пользователя">
+        <b-table :fields="deputiesFields" :items="deputies" :keyword="userName"></b-table>
       </b-tab>
     </b-tabs>
+    <b-modal id="adding-substituted" centered title="Добавление замены" @ok="handleOk">
+      <form ref="form" @submit.stop.prevent="handleSubmit">
+        <b-form-group label="Name" label-for="name-input" invalid-feedback="Name is required">
+          <b-form-input id="name-input" v-model="userName" required></b-form-input>
+        </b-form-group>
+      </form>
+    </b-modal>
   </div>
 </template>
 
@@ -58,9 +86,16 @@ export default {
       userName: "",
       userId: undefined,
       substituted: [],
+      selectedSubstituted: [],
       deputies: [],
       users: [],
-      fields: [
+      deputiesFields: [
+        { key: "name", label: "Пользователь", sortable: true },
+        { key: "date_start", label: "Начальная дата", sortable: true },
+        { key: "date_finish", label: "Конечная дата", sortable: true },
+      ],
+      substitutedFields: [
+        { key: "selected", label: "", sortable: false },
         { key: "name", label: "Пользователь", sortable: true },
         { key: "date_start", label: "Начальная дата", sortable: true },
         { key: "date_finish", label: "Конечная дата", sortable: true },
@@ -68,6 +103,12 @@ export default {
       filterCriteria: "",
       filteredRows: [],
       selectFields: [{ key: "name", label: "Пользователь", sortable: true }],
+      form: {
+        email: "",
+        name: "",
+        food: null,
+        checked: [],
+      },
     };
   },
   mounted() {
@@ -81,6 +122,39 @@ export default {
       });
   },
   methods: {
+    handleOk(bvModalEvt) {
+      // Prevent modal from closing
+      bvModalEvt.preventDefault();
+      // Trigger submit handler
+      this.handleSubmit();
+    },
+    handleSubmit() {
+      let users = [
+        {
+          id: this.userId,
+          date_start: "2020-07-21",
+          date_finish: "2020-08-14",
+          status: "insert",
+        },
+      ];
+
+      let body = {
+        id: this.userId,
+        replacement: users,
+      };
+
+      client.post(`/users/set`, body).catch((err) => {
+        console.log(err);
+      });
+
+      // Hide the modal manually
+      this.$nextTick(() => {
+        this.$bvModal.hide("adding-substituted");
+      });
+    },
+    onRowSelected(items) {
+      this.selectedSubstituted = items;
+    },
     updateTables() {
       // Получить соответствующий список пользователей
       // для указанного пользователя
@@ -110,7 +184,7 @@ export default {
         this.$refs.collapsibleTable.selectRow(0);
       }
     },
-    rowSelected(rowArray) {
+    dropdownRowSelected(rowArray) {
       // No rows or 1 row can be selected
       if (rowArray.length === 1) {
         this.$emit("item-selected", rowArray[0]);
@@ -120,6 +194,27 @@ export default {
         this.updateTables();
       }
     },
+    removeSubstituted() {
+      let users = [];
+
+      this.selectedSubstituted.forEach((user) => {
+        users.push({
+          id: user.id,
+          date_start: user.date_start,
+          date_finish: user.date_finish,
+          status: "delete",
+        });
+      });
+
+      let body = {
+        id: this.userId,
+        replacement: users,
+      };
+
+      client.post(`/users/set`, body).catch((err) => {
+        console.log(err);
+      });
+    },
   },
 };
 </script>
@@ -127,5 +222,9 @@ export default {
 #form {
   margin: 0 auto;
   width: 1000px;
+}
+.form-button {
+  float: right;
+  margin: 7px;
 }
 </style>
