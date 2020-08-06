@@ -1,23 +1,5 @@
 <template>
   <div id="form">
-    <b-row class="my-1">
-      <b-col sm="2">
-        <label class="mt-3 mb-3" size="sm">Пользователь:</label>
-      </b-col>
-      <b-col sm="10">
-        <b-input-group class="mt-3 mb-3" size="sm">
-          <b-form-input
-            id="userName"
-            v-model="userName"
-            v-on:change="onNameChange"
-            placeholder="Введите имя пользователя"
-          ></b-form-input>
-          <b-input-group-append>
-            <b-button>...</b-button>
-          </b-input-group-append>
-        </b-input-group>
-      </b-col>
-    </b-row>
     <b-row>
       <b-col sm="2">
         <label class="mt-3 mb-3" size="sm">Пользователь:</label>
@@ -99,46 +81,26 @@ export default {
       });
   },
   methods: {
-    onNameChange: function () {
-      // Определить ID пользователя по его имени
-      this.userId = undefined;
-
-      for (let i = 0; i < this.users.length; i++) {
-        if (this.users[i].name == this.userName) {
-          this.userId = this.users[i].id;
-          break;
-        }
-      }
-
-      // Выдать сообщение об ошибке, если пользователь не найден
-      if (this.userId == undefined) {
-        alert(`Пользователь ${this.userName} не существует.`);
-      }
-
-      this.updateTables();
-    },
     updateTables() {
       // Получить соответствующий список пользователей
       // для указанного пользователя
-      if (this.tabIndex == 0) {
-        client
-          .get(`/users/substituted/${this.userId}`)
-          .then((response) => {
-            this.substituted = response.data.users;
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      } else if (this.tabIndex == 1) {
-        client
-          .get(`/users/deputies/${this.userId}`)
-          .then((response) => {
-            this.deputies = response.data.users;
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      }
+      client
+        .get(`/users/substituted/${this.userId}`)
+        .then((response) => {
+          this.substituted = response.data.users;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+
+      client
+        .get(`/users/deputies/${this.userId}`)
+        .then((response) => {
+          this.deputies = response.data.users;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
     toggleDropDown() {
       this.$root.$emit("bv::toggle::collapse", "drop-down");
