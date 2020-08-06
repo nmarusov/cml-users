@@ -65,7 +65,7 @@
 import axios from "axios";
 
 const client = axios.create({
-  baseURL: "http://localhost:1402",
+  baseURL: "http://10.254.63.19:1402",
 });
 
 export default {
@@ -90,7 +90,7 @@ export default {
   },
   mounted() {
     client
-      .get("/all")
+      .get("/users/all")
       .then((response) => {
         this.users = response.data.users;
       })
@@ -122,7 +122,7 @@ export default {
       // для указанного пользователя
       if (this.tabIndex == 0) {
         client
-          .get(`/substituted/${this.userId}`)
+          .get(`/users/substituted/${this.userId}`)
           .then((response) => {
             this.substituted = response.data.users;
           })
@@ -131,7 +131,7 @@ export default {
           });
       } else if (this.tabIndex == 1) {
         client
-          .get(`/deputies/${this.userId}`)
+          .get(`/users/deputies/${this.userId}`)
           .then((response) => {
             this.deputies = response.data.users;
           })
