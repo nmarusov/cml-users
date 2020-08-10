@@ -30,12 +30,10 @@
         >
           <template v-slot:cell(selected)="{ rowSelected }">
             <template v-if="rowSelected">
-              <span aria-hidden="true">&check;</span>
-              <span class="sr-only">Selected</span>
+              <b-form-checkbox checked="true"></b-form-checkbox>
             </template>
             <template v-else>
-              <span aria-hidden="true">&nbsp;</span>
-              <span class="sr-only">Not selected</span>
+              <b-form-checkbox checked="false"></b-form-checkbox>
             </template>
           </template>
         </b-table>
