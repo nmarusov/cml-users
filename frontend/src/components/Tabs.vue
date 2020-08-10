@@ -73,7 +73,7 @@
         >
           <multiselect
             v-model="addedUsers"
-            :options="users"
+            :options="selectableUsers"
             :multiple="true"
             :close-on-select="false"
             :clear-on-select="false"
@@ -158,6 +158,18 @@ export default {
       addedStartDate: "",
       addedFinishDate: "",
     };
+  },
+  computed: {
+    selectableUsers() {
+      const contains = (id) => this.substituted.some((e) => e.id === id);
+
+      if (this.user != undefined) {
+        return this.users.filter(
+          (e) => e.id !== this.user.id && !contains(e.id)
+        );
+      }
+      return this.users.filter((e) => !contains(e.id));
+    },
   },
   mounted() {
     client
