@@ -54,17 +54,86 @@
             </template>
           </template>
         </b-table>
-        <b-button class="form-button" @click="removeSubstituted">Удалить</b-button>
-        <b-button class="form-button" v-b-modal.adding-substituted>Добавить</b-button>
+        <b-button
+          class="form-button"
+          @click="removeSubstituted"
+          :disabled="selectedSubstituted.length == 0"
+          >Удалить</b-button
+        >
+        <b-button
+          class="form-button"
+          v-b-modal.adding-substituted
+          :disabled="userId == undefined"
+          >Добавить</b-button
+        >
       </b-tab>
       <b-tab title="Кто исполняет обязанности пользователя">
-        <b-table :fields="deputiesFields" :items="deputies" :keyword="userName"></b-table>
+        <b-table
+          :fields="deputiesFields"
+          :items="deputies"
+          :keyword="userName"
+        ></b-table>
       </b-tab>
     </b-tabs>
-    <b-modal id="adding-substituted" centered title="Добавление замены" @ok="handleOk">
+    <b-modal
+      id="adding-substituted"
+      centered
+      title="Добавление замены"
+      @ok="handleOk"
+      @cancel="handleCancel"
+      @close="handleCancel"
+    >
       <form ref="form" @submit.stop.prevent="handleSubmit">
-        <b-form-group label="Name" label-for="name-input" invalid-feedback="Name is required">
-          <b-form-input id="name-input" v-model="userName" required></b-form-input>
+        <b-form-group
+          label-cols-sm="4"
+          label="Пользователи:"
+          label-align-sm="left"
+          label-for="name-input"
+        >
+          <multiselect
+            v-model="addedUsers"
+            :options="users"
+            :multiple="true"
+            :close-on-select="false"
+            :clear-on-select="false"
+            :preserve-search="true"
+            placeholder="Выберите пользователя"
+            label="name"
+            track-by="name"
+            :preselect-first="false"
+          >
+            <template slot="selection" slot-scope="{ values, isOpen }"
+              ><span
+                class="multiselect__single"
+                v-if="values.length &amp;&amp; !isOpen"
+                >Выбрано {{ values.length }} пользователей</span
+              ></template
+            >
+          </multiselect>
+        </b-form-group>
+        <b-form-group
+          label-cols-sm="4"
+          label="Начальная дата:"
+          label-align-sm="left"
+          label-for="start-date-input"
+        >
+          <b-form-datepicker
+            id="start-datepicker"
+            v-model="addedStartDate"
+            class="mb-2"
+          ></b-form-datepicker>
+        </b-form-group>
+        <b-form-group
+          label-cols-sm="4"
+          label="Конечная дата:"
+          label-align-sm="left"
+          label-for="finish-date-input"
+        >
+          <b-form-datepicker
+            id="finish-datepicker"
+            v-model="addedFinishDate"
+            class="mb-2"
+          ></b-form-datepicker>
         </b-form-group>
       </form>
     </b-modal>
@@ -73,13 +142,16 @@
 
 <script>
 import axios from "axios";
+import Multiselect from "vue-multiselect";
 
 const client = axios.create({
   baseURL: "http://10.254.63.19:1402",
 });
 
 export default {
-  components: {},
+  components: {
+    Multiselect,
+  },
   data() {
     return {
       tabIndex: 0,
@@ -109,6 +181,9 @@ export default {
         food: null,
         checked: [],
       },
+      addedUsers: [],
+      addedStartDate: "",
+      addedFinishDate: "",
     };
   },
   mounted() {
@@ -122,30 +197,38 @@ export default {
       });
   },
   methods: {
+    clearAll() {
+      this.addedUsers = [];
+      this.addedStartDate = "";
+      this.addedFinishDate = "";
+    },
     handleOk(bvModalEvt) {
       // Prevent modal from closing
       bvModalEvt.preventDefault();
       // Trigger submit handler
       this.handleSubmit();
     },
+    handleCancel() {
+      this.clearAll();
+    },
     handleSubmit() {
-      let users = [
-        {
-          id: this.userId,
-          date_start: "2020-07-21",
-          date_finish: "2020-08-14",
-          status: "insert",
-        },
-      ];
-
-      let body = {
-        id: this.userId,
-        replacement: users,
-      };
-
-      client.post(`/users/set`, body).catch((err) => {
-        console.log(err);
+      this.addedUsers.forEach((element) => {
+        element.date_start = this.addedStartDate;
+        element.date_finish = this.addedFinishDate;
       });
+
+      client
+        .post(`/users/substituted/${this.userId}/add`, this.addedUsers)
+        .then((response) => {
+          if (response.status != 200) {
+            return;
+          }
+          this.substituted.push(...this.addedUsers);
+          this.clearAll();
+        })
+        .catch((err) => {
+          console.log(err);
+        });
 
       // Hide the modal manually
       this.$nextTick(() => {
@@ -155,7 +238,7 @@ export default {
     onRowSelected(items) {
       this.selectedSubstituted = items;
     },
-    updateTables() {
+    updateSubstituted() {
       // Получить соответствующий список пользователей
       // для указанного пользователя
       client
@@ -166,7 +249,8 @@ export default {
         .catch((err) => {
           console.log(err);
         });
-
+    },
+    updateDeputies() {
       client
         .get(`/users/deputies/${this.userId}`)
         .then((response) => {
@@ -175,6 +259,10 @@ export default {
         .catch((err) => {
           console.log(err);
         });
+    },
+    updateTables() {
+      this.updateSubstituted();
+      this.updateDeputies();
     },
     toggleDropDown() {
       this.$root.$emit("bv::toggle::collapse", "drop-down");
@@ -198,26 +286,31 @@ export default {
       let users = [];
 
       this.selectedSubstituted.forEach((user) => {
-        users.push({
-          id: user.id,
-          date_start: user.date_start,
-          date_finish: user.date_finish,
-          status: "delete",
+        users.push(user.id);
+      });
+
+      client
+        .post(`/users/substituted/${this.userId}/remove`, users)
+        .then((response) => {
+          if (response.status != 200) {
+            return;
+          }
+          this.substituted.forEach((item, index) => {
+            if (users.includes(item.id)) {
+              this.substituted.pop(index);
+            }
+          });
+        })
+        .catch((err) => {
+          console.log(err);
         });
-      });
-
-      let body = {
-        id: this.userId,
-        replacement: users,
-      };
-
-      client.post(`/users/set`, body).catch((err) => {
-        console.log(err);
-      });
     },
   },
 };
 </script>
+
+<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
+
 <style scoped>
 #form {
   margin: 0 auto;
