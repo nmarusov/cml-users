@@ -10,6 +10,7 @@
       <multiselect
         v-model="user"
         :options="users"
+        :allow-empty="false"
         placeholder="Начните вводить имя пользователя"
         label="name"
         track-by="name"
@@ -76,6 +77,7 @@
             :close-on-select="false"
             :clear-on-select="false"
             :preserve-search="true"
+            :hide-selected="true"
             placeholder="Выберите пользователя"
             label="name"
             track-by="name"
@@ -256,14 +258,8 @@ export default {
             return;
           }
 
-          users.forEach((id) => {
-            for (let i = 0; i < this.substituted.length; i++) {
-              if (this.substituted[i].id == id) {
-                this.substituted.pop(i);
-                break;
-              }
-            }
-          });
+          const contains = (id) => users.some((userId) => userId === id);
+          this.substituted = this.substituted.filter((e) => !contains(e.id));
         })
         .catch((err) => {
           console.log(err);
