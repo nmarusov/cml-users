@@ -39,7 +39,7 @@
         </b-table>
         <b-button
           class="form-button"
-          @click="removeSubstituted"
+          @click="confirmDelete"
           :disabled="selectedSubstituted.length == 0"
           >Удалить</b-button
         >
@@ -118,6 +118,14 @@
         </b-form-group>
       </form>
     </b-modal>
+    <b-modal
+      id="confirm-delete"
+      @ok="removeSubstituted"
+      size="sm"
+      title="Удаление замены"
+      >Подтвердите, что пользователь больше не будет исполнять обязанности
+      выбранных пользователей.</b-modal
+    >
   </div>
 </template>
 
@@ -246,6 +254,9 @@ export default {
     updateTables() {
       this.updateSubstituted();
       this.updateDeputies();
+    },
+    confirmDelete() {
+      this.$bvModal.show("confirm-delete");
     },
     removeSubstituted() {
       let users = [];
