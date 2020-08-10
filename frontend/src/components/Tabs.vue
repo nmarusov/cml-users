@@ -295,9 +295,13 @@ export default {
           if (response.status != 200) {
             return;
           }
-          this.substituted.forEach((item, index) => {
-            if (users.includes(item.id)) {
-              this.substituted.pop(index);
+
+          users.forEach((id) => {
+            for (let i = 0; i < this.substituted.length; i++) {
+              if (this.substituted[i].id == id) {
+                this.substituted.pop(i);
+                break;
+              }
             }
           });
         })
