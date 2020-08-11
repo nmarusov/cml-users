@@ -68,7 +68,7 @@
           label-for="name-input"
         >
           <multiselect
-            v-model="addedUsers"
+            v-model="$v.form.addedUsers.$model"
             :options="selectableUsers"
             :multiple="true"
             :close-on-select="false"
@@ -79,8 +79,6 @@
             placeholder="Выберите пользователя"
             label="name"
             track-by="name"
-            :preselect-first="true"
-            :allow-empty="false"
           >
             <template slot="selection" slot-scope="{ values, isOpen }">
               <span
@@ -89,6 +87,10 @@
               >Выбрано {{ values.length }} пользователей</span>
             </template>
           </multiselect>
+          <b-form-invalid-feedback
+            :force-show="!validateState('addedUsers')"
+            id="users-feedback"
+          >Должен быть выбран хотя бы один пользователь.</b-form-invalid-feedback>
         </b-form-group>
         <b-form-group
           label-cols-sm="4"
@@ -137,7 +139,7 @@
 import axios from "axios";
 import Multiselect from "vue-multiselect";
 import { validationMixin } from "vuelidate";
-import { required } from "vuelidate/lib/validators";
+import { required, minLength } from "vuelidate/lib/validators";
 
 const client = axios.create({
   baseURL: "http://10.254.63.19:1402",
@@ -171,8 +173,8 @@ export default {
         { key: "date_start", label: "Начальная дата", sortable: true },
         { key: "date_finish", label: "Конечная дата", sortable: true },
       ],
-      addedUsers: [],
       form: {
+        addedUsers: null,
         startDate: null,
         finishDate: null,
       },
@@ -202,8 +204,8 @@ export default {
   },
   methods: {
     clearAll() {
-      this.addedUsers = [];
       this.form = {
+        addedUsers: null,
         startDate: null,
         finishDate: null,
       };
@@ -222,21 +224,22 @@ export default {
     },
     handleSubmit() {
       this.$v.form.$touch();
+
       if (this.$v.form.$anyError) {
         return;
       }
-      this.addedUsers.forEach((element) => {
+      this.form.addedUsers.forEach((element) => {
         element.date_start = this.form.startDate;
         element.date_finish = this.form.finishDate;
       });
 
       client
-        .post(`/users/substituted/${this.user.id}/add`, this.addedUsers)
+        .post(`/users/substituted/${this.user.id}/add`, this.form.addedUsers)
         .then((response) => {
           if (response.status != 200) {
             return;
           }
-          this.substituted.push(...this.addedUsers);
+          this.substituted.push(...this.form.addedUsers);
           this.clearAll();
         })
         .catch((err) => {
@@ -309,6 +312,10 @@ export default {
   validations() {
     return {
       form: {
+        addedUsers: {
+          required,
+          minLength: minLength(1),
+        },
         startDate: {
           required,
         },
