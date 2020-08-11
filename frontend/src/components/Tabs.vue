@@ -101,6 +101,7 @@
           <b-form-datepicker
             id="start-datepicker"
             v-model="$v.form.startDate.$model"
+            v-bind="labels"
             class="mb-2"
             :state="validateState('startDate')"
             aria-describedby="start-date-feedback"
@@ -117,6 +118,7 @@
           <b-form-datepicker
             id="finish-datepicker"
             v-model="$v.form.finishDate.$model"
+            v-bind="labels"
             class="mb-2"
             :state="validateState('finishDate')"
             aria-describedby="finish-date-feedback"
@@ -177,6 +179,22 @@ export default {
         addedUsers: null,
         startDate: null,
         finishDate: null,
+      },
+      labels: {
+        labelPrevDecade: "Предыдущая декада",
+        labelPrevYear: "Предыдущий год",
+        labelPrevMonth: "Предыдущий месяц",
+        labelCurrentMonth: "Этот месяц",
+        labelNextMonth: "Следующий месяц",
+        labelNextYear: "Следующий год",
+        labelNextDecade: "Следующая декада",
+        labelToday: "Сегодня",
+        labelSelected: "Выбранная дата",
+        labelNoDateSelected: "Дата не выбрана",
+        labelCalendar: "Календарь",
+        labelNav: "Навигация",
+        labelHelp:
+          "Используйте стрелки на клавиатуре, чтобы перемещаться по датам",
       },
     };
   },
