@@ -41,14 +41,12 @@
           class="form-button"
           @click="confirmDelete"
           :disabled="selectedSubstituted.length == 0"
-          >Удалить</b-button
-        >
+        >Удалить</b-button>
         <b-button
           class="form-button"
           v-b-modal.adding-substituted
           :disabled="user == undefined"
-          >Добавить</b-button
-        >
+        >Добавить</b-button>
       </b-tab>
       <b-tab title="Кто исполняет обязанности пользователя">
         <b-table :fields="deputiesFields" :items="deputies"></b-table>
@@ -81,15 +79,15 @@
             placeholder="Выберите пользователя"
             label="name"
             track-by="name"
-            :preselect-first="false"
+            :preselect-first="true"
+            :allow-empty="false"
           >
-            <template slot="selection" slot-scope="{ values, isOpen }"
-              ><span
+            <template slot="selection" slot-scope="{ values, isOpen }">
+              <span
                 class="multiselect__single"
                 v-if="values.length &amp;&amp; !isOpen"
-                >Выбрано {{ values.length }} пользователей</span
-              ></template
-            >
+              >Выбрано {{ values.length }} пользователей</span>
+            </template>
           </multiselect>
         </b-form-group>
         <b-form-group
@@ -100,9 +98,13 @@
         >
           <b-form-datepicker
             id="start-datepicker"
-            v-model="addedStartDate"
+            v-model="$v.form.startDate.$model"
             class="mb-2"
+            :state="validateState('startDate')"
+            aria-describedby="start-date-feedback"
+            placeholder="Выберите начальную дату"
           ></b-form-datepicker>
+          <b-form-invalid-feedback id="start-date-feedback">Это обязательное поле.</b-form-invalid-feedback>
         </b-form-group>
         <b-form-group
           label-cols-sm="4"
@@ -112,32 +114,41 @@
         >
           <b-form-datepicker
             id="finish-datepicker"
-            v-model="addedFinishDate"
+            v-model="$v.form.finishDate.$model"
             class="mb-2"
+            :state="validateState('finishDate')"
+            aria-describedby="finish-date-feedback"
+            placeholder="Выберите конечную дату"
           ></b-form-datepicker>
+          <b-form-invalid-feedback
+            id="finish-date-feedback"
+          >Конечная дата должна быть больше или равна начальной.</b-form-invalid-feedback>
         </b-form-group>
       </form>
     </b-modal>
-    <b-modal
-      id="confirm-delete"
-      @ok="removeSubstituted"
-      size="sm"
-      title="Удаление замены"
-      >Подтвердите, что пользователь больше не будет исполнять обязанности
-      выбранных пользователей.</b-modal
-    >
+    <b-modal id="confirm-delete" @ok="removeSubstituted" size="sm" title="Удаление замены">
+      Подтвердите, что пользователь больше не будет исполнять обязанности
+      выбранных пользователей.
+    </b-modal>
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import Multiselect from "vue-multiselect";
+import { validationMixin } from "vuelidate";
+import { required } from "vuelidate/lib/validators";
 
 const client = axios.create({
   baseURL: "http://10.254.63.19:1402",
 });
 
+function mustBeGeStartDate(value) {
+  return value >= this.form.startDate;
+}
+
 export default {
+  mixins: [validationMixin],
   components: {
     Multiselect,
   },
@@ -161,8 +172,10 @@ export default {
         { key: "date_finish", label: "Конечная дата", sortable: true },
       ],
       addedUsers: [],
-      addedStartDate: "",
-      addedFinishDate: "",
+      form: {
+        startDate: null,
+        finishDate: null,
+      },
     };
   },
   computed: {
@@ -190,8 +203,13 @@ export default {
   methods: {
     clearAll() {
       this.addedUsers = [];
-      this.addedStartDate = "";
-      this.addedFinishDate = "";
+      this.form = {
+        startDate: null,
+        finishDate: null,
+      };
+      this.$nextTick(() => {
+        this.$v.$reset();
+      });
     },
     handleOk(bvModalEvt) {
       // Prevent modal from closing
@@ -203,9 +221,13 @@ export default {
       this.clearAll();
     },
     handleSubmit() {
+      this.$v.form.$touch();
+      if (this.$v.form.$anyError) {
+        return;
+      }
       this.addedUsers.forEach((element) => {
-        element.date_start = this.addedStartDate;
-        element.date_finish = this.addedFinishDate;
+        element.date_start = this.form.startDate;
+        element.date_finish = this.form.finishDate;
       });
 
       client
@@ -279,6 +301,23 @@ export default {
           console.log(err);
         });
     },
+    validateState(name) {
+      const { $dirty, $error } = this.$v.form[name];
+      return $dirty ? !$error : null;
+    },
+  },
+  validations() {
+    return {
+      form: {
+        startDate: {
+          required,
+        },
+        finishDate: {
+          required,
+          mustBeGeStartDate,
+        },
+      },
+    };
   },
 };
 </script>
