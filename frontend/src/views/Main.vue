@@ -1,57 +1,69 @@
 <template>
   <div id="form">
-    <b-form-group
-      id="fieldset-horizontal"
-      label-cols-sm="auto"
-      label-cols-lg="auto"
-      label="Пользователь:"
-      label-for="user-selector"
-    >
-      <multiselect
-        v-model="user"
-        :options="users"
-        :allow-empty="false"
-        :show-labels="false"
-        placeholder="Начните вводить имя пользователя"
-        label="name"
-        track-by="name"
-        @input="updateTables()"
-      ></multiselect>
-    </b-form-group>
-    <b-tabs content-class="mt-3" v-model="tabIndex">
-      <b-tab title="Чьи обязанности исполняет" active>
-        <b-table
-          :fields="substitutedFields"
-          :items="substituted"
-          selectable
-          select-mode="multi"
-          @row-selected="onRowSelected"
-          responsive="sm"
-        >
-          <template v-slot:cell(selected)="{ rowSelected }">
-            <template v-if="rowSelected">
-              <b-form-checkbox checked="true" disabled></b-form-checkbox>
-            </template>
-            <template v-else>
-              <b-form-checkbox checked="false" disabled></b-form-checkbox>
-            </template>
-          </template>
-        </b-table>
-        <b-button
-          class="form-button"
-          @click="confirmDelete"
-          :disabled="selectedSubstituted.length == 0"
-        >Удалить</b-button>
-        <b-button
-          class="form-button"
-          v-b-modal.adding-substituted
-          :disabled="user == undefined"
-        >Добавить</b-button>
-      </b-tab>
-      <b-tab title="Кто исполняет обязанности пользователя">
-        <b-table :fields="deputiesFields" :items="deputies"></b-table>
-      </b-tab>
-    </b-tabs>
+    <b-container>
+      <b-row align-h="center">
+        <b-col sm="8">
+          <b-form-group
+            id="fieldset-horizontal"
+            label-cols-sm="auto"
+            label-cols-lg="auto"
+            label="Пользователь:"
+            label-for="user-selector"
+          >
+            <multiselect
+              v-model="user"
+              :options="users"
+              :allow-empty="false"
+              :show-labels="false"
+              placeholder="Начните вводить имя пользователя"
+              label="name"
+              track-by="name"
+              @input="updateTables()"
+            ></multiselect>
+          </b-form-group>
+        </b-col>
+      </b-row>
+
+      <b-row align-h="center" align-v="stretch">
+        <b-col sm="8">
+          <b-tabs content-class="mt-3" v-model="tabIndex">
+            <b-tab title="Чьи обязанности исполняет" active>
+              <b-table
+                :fields="substitutedFields"
+                :items="substituted"
+                selectable
+                select-mode="multi"
+                @row-selected="onRowSelected"
+                responsive="sm"
+              >
+                <template v-slot:cell(selected)="{ rowSelected }">
+                  <template v-if="rowSelected">
+                    <b-form-checkbox checked="true" disabled></b-form-checkbox>
+                  </template>
+                  <template v-else>
+                    <b-form-checkbox checked="false" disabled></b-form-checkbox>
+                  </template>
+                </template>
+              </b-table>
+              <b-button
+                class="form-button"
+                @click="confirmDelete"
+                :disabled="selectedSubstituted.length == 0"
+              >Удалить</b-button>
+              <b-button
+                class="form-button"
+                v-b-modal.adding-substituted
+                :disabled="user == undefined"
+              >Добавить</b-button>
+            </b-tab>
+            <b-tab title="Кто исполняет обязанности пользователя">
+              <b-table :fields="deputiesFields" :items="deputies"></b-table>
+            </b-tab>
+          </b-tabs>
+        </b-col>
+      </b-row>
+    </b-container>
+
     <b-modal
       id="adding-substituted"
       centered
@@ -351,9 +363,9 @@ export default {
 
 <style scoped>
 #form {
-  margin: 0 auto;
-  width: 1000px;
+  margin: 5%;
 }
+
 .form-button {
   float: right;
   margin: 7px;
