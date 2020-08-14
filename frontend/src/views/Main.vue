@@ -150,14 +150,10 @@
 </template>
 
 <script>
-import axios from "axios";
+import { HTTP } from "@/App";
 import Multiselect from "vue-multiselect";
 import { validationMixin } from "vuelidate";
 import { required, minLength } from "vuelidate/lib/validators";
-
-const client = axios.create({
-  baseURL: "http://10.254.63.19:1402",
-});
 
 function mustBeGeStartDate(value) {
   return value >= this.form.startDate;
@@ -223,8 +219,7 @@ export default {
     },
   },
   mounted() {
-    client
-      .get("/users/all")
+    HTTP.get("/users/all")
       .then((response) => {
         this.users = response.data.users;
       })
@@ -263,8 +258,7 @@ export default {
         element.date_finish = this.form.finishDate;
       });
 
-      client
-        .post(`/users/substituted/${this.user.id}/add`, this.form.addedUsers)
+      HTTP.post(`/users/substituted/${this.user.id}/add`, this.form.addedUsers)
         .then((response) => {
           if (response.status != 200) {
             return;
@@ -287,8 +281,7 @@ export default {
     updateSubstituted() {
       // Получить соответствующий список пользователей
       // для указанного пользователя
-      client
-        .get(`/users/substituted/${this.user.id}`)
+      HTTP.get(`/users/substituted/${this.user.id}`)
         .then((response) => {
           this.substituted = response.data.users;
         })
@@ -297,8 +290,7 @@ export default {
         });
     },
     updateDeputies() {
-      client
-        .get(`/users/deputies/${this.user.id}`)
+      HTTP.get(`/users/deputies/${this.user.id}`)
         .then((response) => {
           this.deputies = response.data.users;
         })
@@ -320,8 +312,7 @@ export default {
         users.push(user.id);
       });
 
-      client
-        .post(`/users/substituted/${this.user.id}/remove`, users)
+      HTTP.post(`/users/substituted/${this.user.id}/remove`, users)
         .then((response) => {
           if (response.status != 200) {
             return;

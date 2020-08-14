@@ -4,6 +4,12 @@
   </div>
 </template>
 <script>
+import axios from "axios";
+
+export const HTTP = axios.create({
+  baseURL: "http://10.254.63.19:1402",
+});
+
 export default {
   components: {},
 };

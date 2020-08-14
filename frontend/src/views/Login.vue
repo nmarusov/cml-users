@@ -6,7 +6,7 @@
           <div class="apollo-facebook">Authentication</div>
 
           <div class="apollo-login">
-            <form id="apollo-login-form" onsubmit="return false;">
+            <b-form id="apollo-login-form" @submit="onSubmit">
               <b-form-group>
                 <b-form-input
                   type="text"
@@ -47,7 +47,7 @@
               </b-form-group>
 
               <b-button type="submit" variant="outline-secondary" size="sm" block>Sign in</b-button>
-            </form>
+            </b-form>
           </div>
         </b-col>
       </div>
@@ -56,6 +56,17 @@
 </template>
 
 <script>
+export default {
+  components: {},
+  data() {
+    return {};
+  },
+  methods: {
+    onSubmit() {
+      alert("Logged in!");
+    },
+  },
+};
 </script>
 
 <style scoped>
