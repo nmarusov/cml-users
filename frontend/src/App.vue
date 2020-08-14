@@ -1,13 +1,18 @@
 <template>
-  <div id="app">
-    <Tabs />
+  <div id="app" class="height-100-per-cent">
+    <router-view ref="routerView" />
   </div>
 </template>
 <script>
-import Tabs from "./components/Tabs.vue";
 export default {
-  components: {
-    Tabs,
-  },
+  components: {},
 };
 </script>
+
+
+<style scoped>
+.height-100-per-cent {
+  height: 100% !important;
+  overflow: auto;
+}
+</style>
