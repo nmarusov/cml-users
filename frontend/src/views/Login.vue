@@ -6,7 +6,7 @@
           <div class="apollo-facebook">Authentication</div>
 
           <div class="apollo-login">
-            <b-form id="apollo-login-form" @submit="onSubmit">
+            <b-form id="apollo-login-form" @submit.stop.prevent>
               <b-form-group>
                 <b-form-input
                   type="text"
@@ -46,7 +46,7 @@
                 <b-form-checkbox id="remember-me" size="sm"></b-form-checkbox>
               </b-form-group>
 
-              <b-button type="submit" variant="outline-secondary" size="sm" block>Sign in</b-button>
+              <b-button variant="outline-secondary" size="sm" block @click="onSubmit">Sign in</b-button>
             </b-form>
           </div>
         </b-col>
@@ -56,6 +56,8 @@
 </template>
 
 <script>
+import { HTTP } from "@/App";
+
 export default {
   components: {},
   data() {
@@ -63,7 +65,24 @@ export default {
   },
   methods: {
     onSubmit() {
-      alert("Logged in!");
+      let login = "root";
+      let password = "12345678";
+      HTTP.post(
+        "/login",
+        `grant_type=password&username=${login}&password=${password}`,
+        {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }
+      )
+        .then((response) => {
+          if (response.status != 200) {
+            return;
+          }
+          console.log(response.data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
   },
 };
