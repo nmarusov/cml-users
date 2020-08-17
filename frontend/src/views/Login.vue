@@ -9,23 +9,27 @@
             <b-form id="apollo-login-form" @submit.stop.prevent>
               <b-form-group>
                 <b-form-input
+                  v-model="username"
                   type="text"
                   name="login"
                   autocomplete="login"
                   placeholder="Login"
                   size="sm"
                   class="login-input"
+                  :state="loggedIn"
                 />
               </b-form-group>
 
               <b-form-group>
                 <b-input-group size="sm">
                   <b-form-input
-                    type="password"
+                    v-model="password"
+                    type="text"
                     name="password"
                     autocomplete="password"
                     placeholder="Password"
                     class="login-input"
+                    :state="loggedIn"
                   />
                   <b-input-group-append>
                     <b-input-group-text>
@@ -61,27 +65,37 @@ import { HTTP } from "@/App";
 export default {
   components: {},
   data() {
-    return {};
+    return {
+      username: "",
+      password: "",
+      loggedIn: null,
+    };
   },
   methods: {
     onSubmit() {
-      let login = "root";
-      let password = "12345678";
       HTTP.post(
         "/login",
-        `grant_type=password&username=${login}&password=${password}`,
+        `grant_type=password&username=${this.username}&password=${this.password}`,
         {
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
         }
       )
         .then((response) => {
-          if (response.status != 200) {
-            return;
+          localStorage.setItem("jwt", response.data.atoken);
+
+          if (localStorage.getItem("jwt") != null) {
+            this.loggedIn = true;
+            if (this.$route.params.nextUrl != null) {
+              this.$router.push(this.$route.params.nextUrl);
+            } else {
+              this.$router.push("/");
+            }
+          } else {
+            this.loggedIn = false;
           }
-          console.log(response.data);
         })
-        .catch((err) => {
-          console.log(err);
+        .catch(() => {
+          this.loggedIn = false;
         });
     },
   },
