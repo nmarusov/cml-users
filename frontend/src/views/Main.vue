@@ -229,18 +229,30 @@ export default {
     },
   },
   mounted() {
-    HTTP.get("/users/all")
-      .then((response) => {
-        this.users = response.data.users;
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    this.$root.$on("loggedIn", () => {
+      if (!this.users) {
+        this.getAllUsers();
+      }
+    });
   },
   methods: {
     logout() {
       localStorage.removeItem("jwt");
+
+      this.users = [];
+      this.substituted = [];
+      this.deputies = [];
+
       this.$router.push("/login");
+    },
+    getAllUsers() {
+      HTTP.get("/users/all")
+        .then((response) => {
+          this.users = response.data.users;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
     clearAll() {
       this.form = {

@@ -92,6 +92,7 @@ export default {
           localStorage.setItem("jwt", response.data.atoken);
 
           if (localStorage.getItem("jwt") != null) {
+            this.$root.$emit("loggedIn");
             this.loggedIn = true;
             if (this.$route.params.nextUrl != null) {
               this.$router.push(this.$route.params.nextUrl);
