@@ -1,4 +1,4 @@
-# cml-users
+# Режим разработки
 
 ## Project setup
 ```
@@ -22,3 +22,14 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+# Развёртывание
+```
+git clone https://github.com/nmarusov/cml-users.git
+
+cd cml-users/frontend
+
+docker build -t cals/cml-users .
+
+docker run -d -p 8081:8080 --rm --name cml-users-frontend cals/cml-users:latest
+```
