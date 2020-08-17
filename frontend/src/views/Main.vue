@@ -2,7 +2,7 @@
   <div>
     <div id="nav">
       <div id="logout" v-if="isLoggedIn">
-        <a @click="logout">Logout</a>
+        <a @click="handleLogOut">Logout</a>
       </div>
     </div>
     <div id="form">
@@ -173,6 +173,7 @@ export default {
   },
   data() {
     return {
+      count: 0,
       tabIndex: 0,
       user: undefined,
       substituted: [],
@@ -229,14 +230,12 @@ export default {
     },
   },
   mounted() {
-    this.$root.$on("loggedIn", () => {
-      if (!this.users) {
-        this.getAllUsers();
-      }
-    });
+    if (this.isLoggedIn) {
+      this.getAllUsers();
+    }
   },
   methods: {
-    logout() {
+    handleLogOut() {
       localStorage.removeItem("jwt");
 
       this.users = [];
