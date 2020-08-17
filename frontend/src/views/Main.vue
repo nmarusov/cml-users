@@ -1,151 +1,158 @@
 <template>
-  <div id="form">
-    <b-container>
-      <b-row align-h="center">
-        <b-col sm="8">
+  <div>
+    <div id="nav">
+      <div id="logout" v-if="isLoggedIn">
+        <a @click="logout">Logout</a>
+      </div>
+    </div>
+    <div id="form">
+      <b-container>
+        <b-row align-h="center">
+          <b-col sm="8">
+            <b-form-group
+              id="fieldset-horizontal"
+              label-cols-sm="auto"
+              label-cols-lg="auto"
+              label="Пользователь:"
+              label-for="user-selector"
+            >
+              <multiselect
+                v-model="user"
+                :options="users"
+                :allow-empty="false"
+                :show-labels="false"
+                placeholder="Начните вводить имя пользователя"
+                label="name"
+                track-by="name"
+                @input="updateTables()"
+              ></multiselect>
+            </b-form-group>
+          </b-col>
+        </b-row>
+
+        <b-row align-h="center" align-v="stretch">
+          <b-col sm="8">
+            <b-tabs content-class="mt-3" v-model="tabIndex">
+              <b-tab title="Чьи обязанности исполняет" active>
+                <b-table
+                  :fields="substitutedFields"
+                  :items="substituted"
+                  selectable
+                  select-mode="multi"
+                  @row-selected="onRowSelected"
+                  responsive="sm"
+                >
+                  <template v-slot:cell(selected)="{ rowSelected }">
+                    <template v-if="rowSelected">
+                      <b-form-checkbox checked="true" disabled></b-form-checkbox>
+                    </template>
+                    <template v-else>
+                      <b-form-checkbox checked="false" disabled></b-form-checkbox>
+                    </template>
+                  </template>
+                </b-table>
+                <b-button
+                  class="form-button"
+                  @click="confirmDelete"
+                  :disabled="selectedSubstituted.length == 0"
+                >Удалить</b-button>
+                <b-button
+                  class="form-button"
+                  v-b-modal.adding-substituted
+                  :disabled="user == undefined"
+                >Добавить</b-button>
+              </b-tab>
+              <b-tab title="Кто исполняет обязанности пользователя">
+                <b-table :fields="deputiesFields" :items="deputies"></b-table>
+              </b-tab>
+            </b-tabs>
+          </b-col>
+        </b-row>
+      </b-container>
+
+      <b-modal
+        id="adding-substituted"
+        centered
+        title="Добавление замены"
+        @ok="handleOk"
+        @cancel="handleCancel"
+        @close="handleCancel"
+      >
+        <form ref="form" @submit.stop.prevent="handleSubmit">
           <b-form-group
-            id="fieldset-horizontal"
-            label-cols-sm="auto"
-            label-cols-lg="auto"
-            label="Пользователь:"
-            label-for="user-selector"
+            label-cols-sm="4"
+            label="Пользователи:"
+            label-align-sm="left"
+            label-for="name-input"
           >
             <multiselect
-              v-model="user"
-              :options="users"
-              :allow-empty="false"
+              v-model="$v.form.addedUsers.$model"
+              :options="selectableUsers"
+              :multiple="true"
+              :close-on-select="false"
+              :clear-on-select="false"
+              :preserve-search="true"
+              :hide-selected="true"
               :show-labels="false"
-              placeholder="Начните вводить имя пользователя"
+              placeholder="Выберите пользователя"
               label="name"
               track-by="name"
-              @input="updateTables()"
-            ></multiselect>
+            >
+              <template slot="selection" slot-scope="{ values, isOpen }">
+                <span
+                  class="multiselect__single"
+                  v-if="values.length &amp;&amp; !isOpen"
+                >Выбрано {{ values.length }} пользователей</span>
+              </template>
+            </multiselect>
+            <b-form-invalid-feedback
+              :force-show="!validateState('addedUsers')"
+              id="users-feedback"
+            >Должен быть выбран хотя бы один пользователь.</b-form-invalid-feedback>
           </b-form-group>
-        </b-col>
-      </b-row>
-
-      <b-row align-h="center" align-v="stretch">
-        <b-col sm="8">
-          <b-tabs content-class="mt-3" v-model="tabIndex">
-            <b-tab title="Чьи обязанности исполняет" active>
-              <b-table
-                :fields="substitutedFields"
-                :items="substituted"
-                selectable
-                select-mode="multi"
-                @row-selected="onRowSelected"
-                responsive="sm"
-              >
-                <template v-slot:cell(selected)="{ rowSelected }">
-                  <template v-if="rowSelected">
-                    <b-form-checkbox checked="true" disabled></b-form-checkbox>
-                  </template>
-                  <template v-else>
-                    <b-form-checkbox checked="false" disabled></b-form-checkbox>
-                  </template>
-                </template>
-              </b-table>
-              <b-button
-                class="form-button"
-                @click="confirmDelete"
-                :disabled="selectedSubstituted.length == 0"
-              >Удалить</b-button>
-              <b-button
-                class="form-button"
-                v-b-modal.adding-substituted
-                :disabled="user == undefined"
-              >Добавить</b-button>
-            </b-tab>
-            <b-tab title="Кто исполняет обязанности пользователя">
-              <b-table :fields="deputiesFields" :items="deputies"></b-table>
-            </b-tab>
-          </b-tabs>
-        </b-col>
-      </b-row>
-    </b-container>
-
-    <b-modal
-      id="adding-substituted"
-      centered
-      title="Добавление замены"
-      @ok="handleOk"
-      @cancel="handleCancel"
-      @close="handleCancel"
-    >
-      <form ref="form" @submit.stop.prevent="handleSubmit">
-        <b-form-group
-          label-cols-sm="4"
-          label="Пользователи:"
-          label-align-sm="left"
-          label-for="name-input"
-        >
-          <multiselect
-            v-model="$v.form.addedUsers.$model"
-            :options="selectableUsers"
-            :multiple="true"
-            :close-on-select="false"
-            :clear-on-select="false"
-            :preserve-search="true"
-            :hide-selected="true"
-            :show-labels="false"
-            placeholder="Выберите пользователя"
-            label="name"
-            track-by="name"
+          <b-form-group
+            label-cols-sm="4"
+            label="Начальная дата:"
+            label-align-sm="left"
+            label-for="start-date-input"
           >
-            <template slot="selection" slot-scope="{ values, isOpen }">
-              <span
-                class="multiselect__single"
-                v-if="values.length &amp;&amp; !isOpen"
-              >Выбрано {{ values.length }} пользователей</span>
-            </template>
-          </multiselect>
-          <b-form-invalid-feedback
-            :force-show="!validateState('addedUsers')"
-            id="users-feedback"
-          >Должен быть выбран хотя бы один пользователь.</b-form-invalid-feedback>
-        </b-form-group>
-        <b-form-group
-          label-cols-sm="4"
-          label="Начальная дата:"
-          label-align-sm="left"
-          label-for="start-date-input"
-        >
-          <b-form-datepicker
-            id="start-datepicker"
-            v-model="$v.form.startDate.$model"
-            v-bind="labels"
-            class="mb-2"
-            :state="validateState('startDate')"
-            aria-describedby="start-date-feedback"
-            placeholder="Выберите начальную дату"
-          ></b-form-datepicker>
-          <b-form-invalid-feedback id="start-date-feedback">Это обязательное поле.</b-form-invalid-feedback>
-        </b-form-group>
-        <b-form-group
-          label-cols-sm="4"
-          label="Конечная дата:"
-          label-align-sm="left"
-          label-for="finish-date-input"
-        >
-          <b-form-datepicker
-            id="finish-datepicker"
-            v-model="$v.form.finishDate.$model"
-            v-bind="labels"
-            class="mb-2"
-            :state="validateState('finishDate')"
-            aria-describedby="finish-date-feedback"
-            placeholder="Выберите конечную дату"
-          ></b-form-datepicker>
-          <b-form-invalid-feedback
-            id="finish-date-feedback"
-          >Конечная дата должна быть больше или равна начальной.</b-form-invalid-feedback>
-        </b-form-group>
-      </form>
-    </b-modal>
-    <b-modal id="confirm-delete" @ok="removeSubstituted" size="sm" title="Удаление замены">
-      Подтвердите, что пользователь больше не будет исполнять обязанности
-      выбранных пользователей.
-    </b-modal>
+            <b-form-datepicker
+              id="start-datepicker"
+              v-model="$v.form.startDate.$model"
+              v-bind="labels"
+              class="mb-2"
+              :state="validateState('startDate')"
+              aria-describedby="start-date-feedback"
+              placeholder="Выберите начальную дату"
+            ></b-form-datepicker>
+            <b-form-invalid-feedback id="start-date-feedback">Это обязательное поле.</b-form-invalid-feedback>
+          </b-form-group>
+          <b-form-group
+            label-cols-sm="4"
+            label="Конечная дата:"
+            label-align-sm="left"
+            label-for="finish-date-input"
+          >
+            <b-form-datepicker
+              id="finish-datepicker"
+              v-model="$v.form.finishDate.$model"
+              v-bind="labels"
+              class="mb-2"
+              :state="validateState('finishDate')"
+              aria-describedby="finish-date-feedback"
+              placeholder="Выберите конечную дату"
+            ></b-form-datepicker>
+            <b-form-invalid-feedback
+              id="finish-date-feedback"
+            >Конечная дата должна быть больше или равна начальной.</b-form-invalid-feedback>
+          </b-form-group>
+        </form>
+      </b-modal>
+      <b-modal id="confirm-delete" @ok="removeSubstituted" size="sm" title="Удаление замены">
+        Подтвердите, что пользователь больше не будет исполнять обязанности
+        выбранных пользователей.
+      </b-modal>
+    </div>
   </div>
 </template>
 
@@ -217,6 +224,9 @@ export default {
       }
       return this.users.filter((e) => !contains(e.id));
     },
+    isLoggedIn() {
+      return localStorage.getItem("jwt") != null;
+    },
   },
   mounted() {
     HTTP.get("/users/all")
@@ -228,6 +238,10 @@ export default {
       });
   },
   methods: {
+    logout() {
+      localStorage.removeItem("jwt");
+      this.$router.push("/login");
+    },
     clearAll() {
       this.form = {
         addedUsers: null,
@@ -360,5 +374,16 @@ export default {
 .form-button {
   float: right;
   margin: 7px;
+}
+
+#nav {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+  cursor: pointer;
+}
+
+a:hover {
+  border-bottom: 1px solid;
 }
 </style>
