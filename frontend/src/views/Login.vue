@@ -24,7 +24,7 @@
                 <b-input-group size="sm">
                   <b-form-input
                     v-model="password"
-                    type="text"
+                    :type="showPassword ? 'text' : 'password'"
                     name="password"
                     autocomplete="password"
                     placeholder="Password"
@@ -33,7 +33,11 @@
                   />
                   <b-input-group-append>
                     <b-input-group-text>
-                      <b-icon icon="eye-slash" aria-hidden="true"></b-icon>
+                      <b-icon
+                        :icon="showPassword ? 'eye' : 'eye-slash'"
+                        @click.stop="toggleShowPassword"
+                        aria-hidden="true"
+                      ></b-icon>
                     </b-input-group-text>
                   </b-input-group-append>
                 </b-input-group>
@@ -69,9 +73,13 @@ export default {
       username: "",
       password: "",
       loggedIn: null,
+      showPassword: false,
     };
   },
   methods: {
+    toggleShowPassword() {
+      this.showPassword = !this.showPassword;
+    },
     onSubmit() {
       HTTP.post(
         "/login",
