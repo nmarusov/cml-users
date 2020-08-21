@@ -1,10 +1,9 @@
 <template>
   <div>
     <div id="nav">
-      <div id="logout" v-if="isLoggedIn">
-        <a @click="handleLogOut">Logout</a>
-      </div>
+      <b-button @click="handleLogOut" v-if="isLoggedIn" size="sm" class="cml-button">Выйти</b-button>
     </div>
+
     <div id="form">
       <b-container>
         <b-row align-h="center">
@@ -32,7 +31,7 @@
 
         <b-row align-h="center" align-v="stretch">
           <b-col sm="8">
-            <b-tabs content-class="mt-3" v-model="tabIndex">
+            <b-tabs id="tabs" content-class="mt-3" v-model="tabIndex" card>
               <b-tab title="Чьи обязанности исполняет" active>
                 <b-table
                   :fields="substitutedFields"
@@ -41,6 +40,10 @@
                   select-mode="multi"
                   @row-selected="onRowSelected"
                   responsive="sm"
+                  hover
+                  bordered
+                  head-variant="light"
+                  class="cml-table"
                 >
                   <template v-slot:cell(selected)="{ rowSelected }">
                     <template v-if="rowSelected">
@@ -63,7 +66,14 @@
                 >Добавить</b-button>
               </b-tab>
               <b-tab title="Кто исполняет обязанности пользователя">
-                <b-table :fields="deputiesFields" :items="deputies"></b-table>
+                <b-table
+                  :fields="deputiesFields"
+                  :items="deputies"
+                  hover
+                  bordered
+                  head-variant="light"
+                  class="cml-table"
+                ></b-table>
               </b-tab>
             </b-tabs>
           </b-col>
@@ -394,7 +404,49 @@ export default {
   cursor: pointer;
 }
 
-a:hover {
-  border-bottom: 1px solid;
+#tabs {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  line-height: 1.42857143;
+  color: #333;
+  font-family: "Open Sans", sans-serif !important;
+  box-sizing: border-box;
+  --toggle-checked-color: #eba079;
+  --toggle-not-checked-color: var(--toggle-checked-color);
+  --toggle-checked-border-color: var(--toggle-checked-color);
+  --toggle-not-checked-border-color: var(--toggle-checked-color);
+  font-size: 13px;
+  position: relative;
+  width: 100%;
+  min-height: 170px;
+  height: 100%;
+  border-radius: 4px;
+  /* padding: 8px; */
+  box-shadow: 0 1px 5px rgba(90, 90, 90, 0.3);
+  background: white;
+}
+.cml-table {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  line-height: 1.42857143;
+  color: #333;
+  font-family: "Open Sans", sans-serif !important;
+  box-sizing: border-box;
+  --toggle-checked-color: #eba079;
+  --toggle-not-checked-color: var(--toggle-checked-color);
+  --toggle-checked-border-color: var(--toggle-checked-color);
+  --toggle-not-checked-border-color: var(--toggle-checked-color);
+  font-size: 13px;
+  border-spacing: 0;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  max-width: 100%;
+  background-color: transparent;
+  border-collapse: collapse;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
+cml-button {
+  background-image: linear-gradient(to bottom, #bbbbbb 0, #aaaaaa 100%);
+  border-color: #aaaaaa;
+  color: #ffffff;
 }
 </style>
